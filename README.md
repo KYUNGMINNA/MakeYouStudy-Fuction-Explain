@@ -186,11 +186,13 @@ Button이 클릭 되면 ,해당 Activity로 전환 된다.
         startActivity(new Intent(getApplicationContext(), AttendanceRateActivity.class));
         }
     }
-    ```
+ 
+ 
 <br>
 
+
  어플 내 있는 기능 수행에 앞서 권한을 요청 한다.
-```java
+
  if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
             checkPermission();
             // Android 10 이상부터 사용자가 직접 OverlayPermission을 설정해 줘야함
