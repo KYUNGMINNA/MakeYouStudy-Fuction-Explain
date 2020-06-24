@@ -159,129 +159,141 @@ Handler timer=new Handler();
 ### 버튼 클릭 Listener
 
 Button이 클릭 되면 ,해당 Activity로 전환 된다.
-```java
-{
-buttonCalendar.setOnClickListener(this);
-buttonTimeTable.setOnClickListener(this);
-buttonDiary.setOnClickListener(this);
-buttonProfile.setOnClickListener(this);
-buttonAttendanceRate.setOnClickListener(this);
-}
-@Override
-public void onClick(View view) {
-if(view == buttonCalendar){
-startActivity(new Intent(getApplicationContext(), CalendarActivity.class));
-}
-if(view == buttonTimeTable){
-startActivity(new Intent(getApplicationContext(), TimeTableActivity.class));
-}
-if(view == buttonDiary){
-startActivity(new Intent(getApplicationContext(), DiaryActivity.class));
-}
-if(view == buttonProfile){
-startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
-}
-if(view == buttonAttendanceRate){
-startActivity(new Intent(getApplicationContext(), AttendanceRateActivity.class));
-}
-}
-```
+   ```java
+        {
+    buttonCalendar.setOnClickListener(this);
+    buttonTimeTable.setOnClickListener(this);
+    buttonDiary.setOnClickListener(this);
+    buttonProfile.setOnClickListener(this);
+    buttonAttendanceRate.setOnClickListener(this);
+    }
+    @Override
+    public void onClick(View view)
+    {
+        if(view == buttonCalendar){
+        startActivity(new Intent(getApplicationContext(), CalendarActivity.class));
+        }
+        if(view == buttonTimeTable){
+         startActivity(new Intent(getApplicationContext(), TimeTableActivity.class));
+        }
+        if(view == buttonDiary){
+        startActivity(new Intent(getApplicationContext(), DiaryActivity.class));
+        }
+        if(view == buttonProfile){
+        startActivity(new Intent(getApplicationContext(), ProfileActivity.class));
+        }
+        if(view == buttonAttendanceRate){
+        startActivity(new Intent(getApplicationContext(), AttendanceRateActivity.class));
+        }
+    }
+    ```
 <br>
 
  어플 내 있는 기능 수행에 앞서 권한을 요청 한다.
 ```java
-if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-checkPermission();
-// Android 10 이상부터 사용자가 직접 OverlayPermission을 설정해 줘야함
-if(!Settings.canDrawOverlays(getApplicationContext())){
-checkOverlayPermission();
-}
-}
-@Override
-public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-switch (requestCode){
-case MULTIPLE_PERMISSIONS:{
-if(grantResults.length > 0){
-for (int i = 0; i < permissions.length; i++){
-if(permissions[i].equals(this.permission[i])){
-if(grantResults[i] != PackageManager.PERMISSION_GRANTED){
-showToast_PermissionDeny();
-}
-}
-}
-}else{
-showToast_PermissionDeny();
-}
-return;
-}
-}
+ if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            checkPermission();
+            // Android 10 이상부터 사용자가 직접 OverlayPermission을 설정해 줘야함
+            if(!Settings.canDrawOverlays(getApplicationContext())){
+                checkOverlayPermission();
+            }
+        }
+        //initializing views
+        buttonCalendar = (Button)findViewById(R.id.buttonCalendar);
+        buttonTimeTable = (Button)findViewById(R.id.buttonTimeTable);
+        buttonDiary = (Button)findViewById(R.id.buttonDiary);
+        buttonProfile = (Button)findViewById(R.id.buttonProfile);
+        buttonAttendanceRate = (Button)findViewById(R.id.buttonAttendance);
+        imageViewGood = (ImageView)findViewById(R.id.good);
+        imageViewGood.setImageResource(res);
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case MULTIPLE_PERMISSIONS:{
+                if(grantResults.length > 0){
+                    for (int i = 0; i < permissions.length; i++){
+                        if(permissions[i].equals(this.permission[i])){
+                            if(grantResults[i] != PackageManager.PERMISSION_GRANTED){
+                                showToast_PermissionDeny();
+                            }
+                        }
+                    }
+                }else{
+                    showToast_PermissionDeny();
+                }
+                return;
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+    private boolean checkPermission(){
+        int result;
+        List<String> permissionList = new ArrayList<>();
+        for (String pm : permission){
+            result = ContextCompat.checkSelfPermission(this, pm);
+            if(result != PackageManager.PERMISSION_GRANTED){
+                permissionList.add(pm);
+            }
+        }if(!permissionList.isEmpty()){
+            ActivityCompat.requestPermissions(this, permissionList.toArray(new String[permissionList.size()]), MULTIPLE_PERMISSIONS);
+            return false;
+        }
+        return true;
+    }
+    // alarm overlay permission check 알람이 시작될 때 Activity를 띄워줌
+    private void checkOverlayPermission(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("다른 앱 위에 쓰기 권한").setMessage("Make You Study의 알람 화면을 띄우기 위해서 권한을 허용해 주셔야 합니다.");
+        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                try{
+                    Uri uri = Uri.parse("package:" + getPackageName());
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, uri);
 
-super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                    startActivityForResult(intent, 5469);
+                }catch (Exception e){
+                    Log.d("MainActivity", "" + e);
+                }
+            }
+        });
+        builder.setNegativeButton("종료", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                showToast_PermissionDeny();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+    // Permission check notification
+    private void showToast_PermissionDeny() {
+        Toast.makeText(this, "권한 요청에 동의 해주셔야 이용 가능합니다. 설정에서 권한 허용 하시기 바랍니다.", Toast.LENGTH_SHORT).show();
+        finish();
+    }
 }
-
-private boolean checkPermission(){
-int result;
-List<String> permissionList = new ArrayList<>();
-for (String pm : permission){
-result = ContextCompat.checkSelfPermission(this, pm);
-if(result != PackageManager.PERMISSION_GRANTED){
-permissionList.add(pm);
-}
-}if(!permissionList.isEmpty()){
-ActivityCompat.requestPermissions(this, permissionList.toArray(new String[permissionList.size()]), MULTIPLE_PERMISSIONS);
-return false;
-}
-return true;
-}
-// alarm overlay permission check 알람이 시작될 때 Activity를 띄워줌
-private void checkOverlayPermission(){
-AlertDialog.Builder builder = new AlertDialog.Builder(this);
-builder.setTitle("백그라운드 재생 권한").setMessage("백그라운드에서 Make You Study의 타임테이블 알람을 울리기 위해서 권한을 허용해 주셔야 합니다.");
-builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-@Override
-public void onClick(DialogInterface dialog, int which) {
-try{
-Uri uri = Uri.parse("package:" + getPackageName());
-Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, uri);
-
-startActivityForResult(intent, 5469);
-}catch (Exception e){
-Log.d("MainActivity", "" + e);
-}
-}
-});
-builder.setNegativeButton("종료", new DialogInterface.OnClickListener() {
-@Override
-public void onClick(DialogInterface dialog, int which) {
-showToast_PermissionDeny();
-}
-});
-AlertDialog alertDialog = builder.create();
-alertDialog.show();
-
-}
-// Permission check notification
-private void showToast_PermissionDeny() {
-Toast.makeText(this, "권한 요청에 동의 해주셔야 이용 가능합니다. 설정에서 권한 허용 하시기 바랍니다.", Toast.LENGTH_SHORT).show();
-finish();
-}
-}
-```
 <br>
 
 로그인이 되어 있어야 어플사용이 가능 하다.  로그인 되어 있지 않으면 로그인 화면으로 전환한다.<br>
   firebaseAuth.getCurrenter는  현재 로그인 되어있는 사용자를 의미 한다.
 ```java
-// 유저가 로그인하지 않은 상태라면 LoginActivity 실행
-firebaseAuth = FirebaseAuth.getInstance();
-if(firebaseAuth.getCurrentUser() == null) {
-finish();
-startActivity(new Intent(this, LoginActivity.class));
-}
-else{
-FirebaseUser user = firebaseAuth.getCurrentUser();
-}
-}
+ // 유저가 로그인하지 않은 상태라면 LoginActivity 실행
+ firebaseAuth = FirebaseAuth.getInstance();
+ if(firebaseAuth.getCurrentUser() == null)
+        {
+            finish();
+            startActivity(new Intent(this, LoginActivity.class));
+        }
+        else{
+            FirebaseUser user = firebaseAuth.getCurrentUser();
+            //button event
+            buttonCalendar.setOnClickListener(this);
+            buttonTimeTable.setOnClickListener(this);
+            buttonDiary.setOnClickListener(this);
+            buttonProfile.setOnClickListener(this);
+            buttonAttendanceRate.setOnClickListener(this);
+        }
 ```
 <br>
 
@@ -340,61 +352,59 @@ imageViewGood.setImageResource(res);
 
 회원가입한 계정으로 로그인 
 ```java
-{ 
- //회원가입한 계정으로 로그인 
-btn_login = (Button) findViewById(R.id.bt_login);  
-}
-//로그인 버튼 클릭시 파이어베이스 eamil 로그인 시작  
-btn_login.setOnClickListener(new View.OnClickListener() {  
-@Override  
-public void onClick(View v) {  
-email = ed_eamil.getText().toString();  
-password = ed_password.getText().toString();  
-if (isValidEmail() && isValidPasswd()) {  
-loginUser(email, password);  
-}  
-}  
-});  
-//이메일 유효성 검사
-private boolean isValidEmail() {  
-if (email.isEmpty()) {  
-// 이메일 공백  
-Toast.makeText(LoginActivity.this,"이메일이 공백입니다.",Toast.LENGTH_SHORT);  
-return false;  }  
-else {  
-return true;  
-}  
-}  
-// 비밀번호 유효성 검사  
-private boolean isValidPasswd() {  
-if (password.isEmpty()) {  
-// 비밀번호 공백  
-Toast.makeText(LoginActivity.this,"패스워드가 공백입니다.",Toast.LENGTH_SHORT);  
-return false;  
-} else {  
-return true;  
-}  
-} 
-//입력한 이메일 과 비밀번호에 오류가 없다면 createUser() 가 동작합니다.email과 password를 받아와  `createUserWithEmailAndPassword`에 전달하여 신규 계정을 생성합니다. 계정 생성에 성공을 하면 MainAcitivity로 화면이 전환 됩니다. 계정 생성 실패시  메세지를 띄웁니다.
-private void loginUser(String email, String password)  
-{  
-firebaseAuth.signInWithEmailAndPassword(email, password)  
-.addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {  
-@Override  
-public void onComplete(@NonNull Task<AuthResult> task) {  
-if (task.isSuccessful()) {  
-// 로그인 성공  
-Toast.makeText(LoginActivity.this, R.string.success_login, Toast.LENGTH_SHORT).show();  
-Intent intent=new Intent(getApplicationContext(),MainActivity.class);  
-startActivity(intent);  
-finish();  
-} else {  
-// 로그인 실패  
-Toast.makeText(LoginActivity.this, "이메일/비밀번호를 확인해 주세요", Toast.LENGTH_SHORT).show();  
-}  
-}  
-});  
-}  
+ //로그인 버튼 클릭시 파이어베이스 eamil 로그인 시작
+        btn_login.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                email = ed_eamil.getText().toString();
+                password = ed_password.getText().toString();
+                if (isValidEmail() && isValidPasswd()) {
+                    loginUser(email, password);
+                }
+            }
+        });
+    }//이메일 유효성 검사
+    private boolean isValidEmail() {
+        if (email.isEmpty()) {
+            // 이메일 공백
+            Toast.makeText(LoginActivity.this,"이메일이 공백입니다.",Toast.LENGTH_SHORT);
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+    // 비밀번호 유효성 검사
+    private boolean isValidPasswd() {
+        if (password.isEmpty()) {
+            // 비밀번호 공백
+            Toast.makeText(LoginActivity.this,"패스워드가 공백입니다.",Toast.LENGTH_SHORT);
+            return false;
+        } else {
+            return true;
+        }
+    }
+    //입력한 이메일 과 비밀번호에 오류가 없다면 createUser() 가 동작합니다.email과 password를 받아와  `createUserWithEmailAndPassword`에 전달하여 신규 계정을 생성합니다. 계정 생성에 성공을 하면 MainAcitivity로 화면이 전환 됩니다. 계정 생성 실패시  메세지를 띄웁니다.
+
+    private void loginUser(String email, String password)
+    {
+        firebaseAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // 로그인 성공
+                            Toast.makeText(LoginActivity.this, R.string.success_login, Toast.LENGTH_SHORT).show();
+                            Intent intent=new Intent(getApplicationContext(),MainActivity.class);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            // 로그인 실패
+                            Toast.makeText(LoginActivity.this, "이메일/비밀번호를 확인해 주세요", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
 ```
 <Br>
 
